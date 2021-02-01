@@ -1,0 +1,7 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>body{padding:1.875rem;}</style><meta charset='UTF-8'>
+</head>
+<body><p>之前做过很多次这样的，但是都忘了，记忆中使用的方法有两个，一个是利用JavaScript的冒泡事件，另一个是用vue，但我又想到一个更好的方法，就是在页面中添加一个div，设置宽高都为100%，透明属性opacity为0，display为none，绝对定位为top：0，left：0，设置排除在点击事件之外的元素的属性的z-index为1000(多少不重要，就是要在之前设置的div之上),还要设置position属性，不然没用， 然后点击某个按钮触发事件，就改变这个div的属性display为block，然后给这个div绑定一个事件，就是点击某个元素之外的元素触发的事件，因为排除之外的元素设置的z-index在添加的div之上，所以点击排除之外的元素就不会触发我们给div绑定的事件，这样就可以了</p><p>代码示例：</p><p>在body中添加div</p><p><span>		</span>&lt;div onclick="shade_click()" id="shade" style="width: 100%;height: 100%;position: absolute;top: 0;left: 0;opacity: 0;display: none;"&gt;&lt;/div&gt;</p><p>//排除之外的元素</p><p>&lt;div class="o_categorys" style="z-index: 1000;"&gt;</p><p><span>		</span>&lt;/div&gt;</p><p>//添加的事件,点击class为o_categorys这个事件不会触发，点击这个class元素以外的就会触发</p><p>function shade_click(){</p><p><span>		</span>}</p><p><br></p><p>这样做有个缺点就是被#shade（也就是我们添加的这个div）覆盖的元素的事件不会生效，不过也无妨，可以在事件触发了之后设置这个div的display为none，也就是隐藏它即可</p></body>
+</html>

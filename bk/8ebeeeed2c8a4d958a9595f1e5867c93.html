@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>body{padding:1.875rem;}</style><meta charset='UTF-8'>
+</head>
+<body><p>配置文件是我们再熟悉不过的了，尤其是 Spring Boot 项目，除了引入相应的 maven 包之外，剩下的工作就是完善配置文件了，例如 mysql、redis 、security 相关的配置。除了项目运行的基础配置之外，还有一些配置是与我们业务有关系的，比如说七牛存储、短信相关、邮件相关，或者一些业务上的开关。</p><p>对于一些简单的项目来说，我们一般都是直接把相关配置放在单独的配置文件中，以 properties 或者 yml 的格式出现，更省事儿的方式是直接放到 application.properties 或 application.yml 中。但是这样的方式有个明显的问题，那就是，当修改了配置之后，必须重启服务，否则配置无法生效。</p><p>目前有一些用的比较多的开源的配置中心，比如携程的 Apollo、蚂蚁金服的 disconf 等，对比 Spring Cloud Config，这些配置中心功能更加强大。有兴趣的可以拿来试一试。</p><p><strong>接下来</strong>，我们开始在 Spring Boot 项目中集成 Spring Cloud Config，并以 github 作为配置存储。除了 git 外，还可以用数据库、svn、本地文件等作为存储。主要从以下三块来说一下 Config 的使用。</p><p><span>1.</span>基础版的配置中心（不集成 Eureka）;</p><p><span>2.</span>结合 Eureka 版的配置中心;</p><p><span>3.</span>实现配置的自动刷新；</p><h2 id="实现最简单的配置中心">实现最简单的配置中心</h2><p>最简单的配置中心，就是启动一个服务作为服务方，之后各个需要获取配置的服务作为客户端来这个服务方获取配置。</p><p><span>先在 github 中建立配置文件</span></p><p>我创建的仓库地址为：<a href="https://github.com/huzhicheng/config-only-a-demo/tree/master">配置中心仓库</a></p><p>目录结构如下：</p><p><img src="https://img2018.cnblogs.com/blog/273364/201907/273364-20190725084302799-353615966.png" alt=""></p><p>配置文件的内容大致如下，用于区分，略有不同。</p><pre><code class="language-yaml hljs"><span class="hljs-attr">data:</span>
+<span class="hljs-attr">  env:</span> <span class="hljs-string">config-eureka-dev</span>
+<span class="hljs-attr">  user:</span>
+<span class="hljs-attr">    username:</span> <span class="hljs-string">eureka-client-user</span>
+<span class="hljs-attr">    password:</span> <span class="hljs-number">1291029102</span>
+</code></pre><p>注意文件的名称不是乱起的，例如上面的 config-single-client-dev.yml 和 config-single-client-prod.yml 这两个是同一个项目的不同版本，项目名称为 config-single-client， 一个对应开发版，一个对应正式版。config-eureka-client-dev.yml 和 config-eureka-client-prod.yml 则是另外一个项目的，项目的名称就是 config-eureka-client 。</p><p><span>创建配置中心服务端</span></p><p>1、新建 Spring Boot 项目，引入 config-server 和 starter-web</p><pre><p><font face="monospace">&lt;!--web包一定要导入，我就是因为这个包没导入导致项目一直启动不了 --&gt;</font></p><p><code class="language-xml hljs"><span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span></code></p><code class="language-xml hljs">    <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>org.springframework.boot<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>spring-boot-starter-web<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span>
+
+<span class="hljs-comment">&lt;!-- spring cloud config 服务端包 --&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>org.springframework.cloud<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>spring-cloud-config-server<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span>
+</code></pre><p>2、配置 config 相关的配置项</p><p>bootstrap.yml 文件</p><pre><code class="language-yaml hljs"><span class="hljs-attr">spring:</span>
+<span class="hljs-attr">  application:</span>
+<span class="hljs-attr">    name:</span> <span class="hljs-string">config-single-server</span>  <span class="hljs-comment"># 应用名称</span>
+<span class="hljs-attr">  cloud:</span>
+<span class="hljs-attr">     config:</span>
+<span class="hljs-attr">        server:</span>
+<span class="hljs-attr">          git:</span>
+<span class="hljs-attr">            uri:</span> <span class="hljs-attr">https://github.com/huzhicheng/config-only-a-demo</span> <span class="hljs-comment">#配置文件所在仓库</span>
+<span class="hljs-attr">            username:</span> <span class="hljs-string">github</span> <span class="hljs-string">登录账号</span>
+<span class="hljs-attr">            password:</span> <span class="hljs-string">github</span> <span class="hljs-string">登录密码</span>
+<span class="hljs-attr">            default-label:</span> <span class="hljs-string">master</span> <span class="hljs-comment">#配置文件分支</span>
+<span class="hljs-attr">            search-paths:</span> <span class="hljs-string">config</span>  <span class="hljs-comment">#配置文件所在根目录</span>
+</code></pre><p>application.yml</p><pre><code class="language-yaml hljs"><span class="hljs-attr">server:</span>
+<span class="hljs-attr">  port:</span> <span class="hljs-number">3301</span>
+</code></pre><p>3、在 Application 启动类上增加相关注解&nbsp;<code>@EnableConfigServer</code></p><pre><code class="language-java hljs"><span class="hljs-meta">@SpringBootApplication</span>
+<span class="hljs-meta">@EnableConfigServer</span>
+<span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Application</span> </span>{
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> </span>{
+        SpringApplication.run(Application.class, args);
+    }
+}
+</code></pre><p>启动服务，接下来测试一下。</p><p>Spring Cloud Config 有它的一套访问规则，我们通过这套规则在浏览器上直接访问就可以。</p><pre><code class="language-yaml hljs"><span class="hljs-string">/{application}/{profile}[/{label}]</span>
+<span class="hljs-string">/{application}-{profile}.yml</span>
+<span class="hljs-string">/{label}/{application}-{profile}.yml</span>
+<span class="hljs-string">/{application}-{profile}.properties</span>
+<span class="hljs-string">/{label}/{application}-{profile}.properties</span>
+</code></pre><p>{application} 就是应用名称，对应到配置文件上来，就是配置文件的名称部分，例如我上面创建的配置文件。</p><p>{profile} 就是配置文件的版本，我们的项目有开发版本、测试环境版本、生产环境版本，对应到配置文件上来就是以 application-{profile}.yml 加以区分，例如application-dev.yml、application-sit.yml、application-prod.yml。</p><p>{label} 表示 git 分支，默认是 master 分支，如果项目是以分支做区分也是可以的，那就可以通过不同的 label 来控制访问不同的配置文件了。</p><p>上面的 5 条规则中，我们只看前三条，因为我这里的配置文件都是 yml 格式的。根据这三条规则，我们可以通过以下地址查看配置文件内容:</p><p><a href="http://localhost:3301/config-single-client/dev/master">http://localhost:3301/config-single-client/dev/master</a></p><p><a href="http://localhost:3301/config-single-client/prod">http://localhost:3301/config-single-client/prod</a></p><p><a href="http://localhost:3301/config-single-client-dev.yml">http://localhost:3301/config-single-client-dev.yml</a></p><p><a href="http://localhost:3301/config-single-client-prod.yml">http://localhost:3301/config-single-client-prod.yml</a></p><p><a href="http://localhost:3301/master/config-single-client-prod.yml">http://localhost:3301/master/config-single-client-prod.yml</a></p><p>通过访问以上地址，如果可以正常返回数据，则说明配置中心服务端一切正常。</p><p><span>创建配置中心客户端，使用配置</span></p><p>配置中心服务端好了，配置数据准备好了，接下来，就要在我们的项目中使用它了。</p><p>1、引用相关的 maven 包。</p><pre><code class="language-xml hljs"><span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>org.springframework.boot<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>spring-boot-starter-web<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span>
+
+<span class="hljs-comment">&lt;!-- spring cloud config 客户端包 --&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>org.springframework.cloud<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>spring-cloud-starter-config<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span>
+
+<span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>org.springframework.boot<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>spring-boot-starter-actuator<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span>
+</code></pre><p>2、初始化配置文件</p><p>bootstrap.yml</p><pre><code class="language-yaml hljs"><span class="hljs-attr">spring:</span>
+<span class="hljs-attr">  profiles:</span>
+<span class="hljs-attr">    active:</span> <span class="hljs-string">dev</span>
+
+<span class="hljs-meta">---</span>
+<span class="hljs-attr">spring:</span>
+<span class="hljs-attr">  profiles:</span> <span class="hljs-string">prod</span>
+<span class="hljs-attr">  application:</span>
+<span class="hljs-attr">    name:</span> <span class="hljs-string">config-single-client</span>
+<span class="hljs-attr">  cloud:</span>
+<span class="hljs-attr">     config:</span>
+<span class="hljs-attr">       uri:</span> <span class="hljs-attr">http://localhost:3301</span>
+<span class="hljs-attr">       label:</span> <span class="hljs-string">master</span>
+<span class="hljs-attr">       profile:</span> <span class="hljs-string">prod</span>
+
+
+<span class="hljs-meta">---</span>
+<span class="hljs-attr">spring:</span>
+<span class="hljs-attr">  profiles:</span> <span class="hljs-string">dev</span>
+<span class="hljs-attr">  application:</span>
+<span class="hljs-attr">    name:</span> <span class="hljs-string">config-single-client</span>
+<span class="hljs-attr">  cloud:</span>
+<span class="hljs-attr">     config:</span>
+<span class="hljs-attr">       uri:</span> <span class="hljs-attr">http://localhost:3301</span>
+<span class="hljs-attr">       label:</span> <span class="hljs-string">master</span>
+<span class="hljs-attr">       profile:</span> <span class="hljs-string">dev</span>
+</code></pre><p>配置了两个版本的配置，并通过 spring.profiles.active 设置当前使用的版本，例如本例中使用的 dev 版本。</p><p>application.yml</p><pre><code class="language-yaml hljs"><span class="hljs-attr">server:</span>
+<span class="hljs-attr">  port:</span> <span class="hljs-number">3302</span>
+<span class="hljs-attr">management:</span>
+<span class="hljs-attr">  endpoint:</span>
+<span class="hljs-attr">    shutdown:</span>
+<span class="hljs-attr">      enabled:</span> <span class="hljs-literal">false</span>
+<span class="hljs-attr">  endpoints:</span>
+<span class="hljs-attr">    web:</span>
+<span class="hljs-attr">      exposure:</span>
+<span class="hljs-attr">        include:</span> <span class="hljs-string">"*"</span>
+
+<span class="hljs-attr">data:</span>
+<span class="hljs-attr">  env:</span> <span class="hljs-string">NaN</span>
+<span class="hljs-attr">  user:</span>
+<span class="hljs-attr">    username:</span> <span class="hljs-string">NaN</span>
+<span class="hljs-attr">    password:</span> <span class="hljs-string">NaN</span>
+</code></pre><p>其中 management 是关于 actuator 相关的，接下来自动刷新配置的时候需要使用。</p><p>data 部分是当无法读取配置中心的配置时，使用此配置，以免项目无法启动。</p><p>3、要读取配置中心的内容，需要增加相关的配置类，Spring Cloud Config 读取配置中心内容的方式和读取本地配置文件中的配置是一模一样的。可以通过 @Value 或 @ConfigurationProperties 来获取。</p><pre><code class="language-java hljs"><span class="hljs-meta">@SpringBootApplication</span>
+<span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Application</span> </span>{
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> </span>{
+        SpringApplication.run(Application.class, args);
+    }
+}
+</code></pre><p>4、要读取配置中心的内容，需要增加相关的配置类，Spring Cloud Config 读取配置中心内容的方式和读取本地配置文件中的配置是一模一样的。可以通过 @Value 或 @ConfigurationProperties 来获取。</p><p>使用 @Value 的方式：</p><pre><code class="language-java hljs"><span class="hljs-meta">@Data</span>
+<span class="hljs-meta">@Component</span>
+<span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">GitConfig</span> </span>{
+
+    <span class="hljs-meta">@Value</span>(<span class="hljs-string">"${data.env}"</span>)
+    <span class="hljs-keyword">private</span> String env;
+
+    <span class="hljs-meta">@Value</span>(<span class="hljs-string">"${data.user.username}"</span>)
+    <span class="hljs-keyword">private</span> String username;
+
+    <span class="hljs-meta">@Value</span>(<span class="hljs-string">"${data.user.password}"</span>)
+    <span class="hljs-keyword">private</span> String password;
+
+}
+</code></pre><p>使用 @ConfigurationProperties 的方式：</p><pre><code class="language-java hljs"><span class="hljs-meta">@Component</span>
+<span class="hljs-meta">@Data</span>
+<span class="hljs-meta">@ConfigurationProperties</span>(prefix = <span class="hljs-string">"data"</span>)
+<span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">GitAutoRefreshConfig</span> </span>{
+
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">UserInfo</span> </span>{
+        <span class="hljs-keyword">private</span> String username;
+
+        <span class="hljs-keyword">private</span> String password;
+
+        <span class="hljs-function"><span class="hljs-keyword">public</span> String <span class="hljs-title">getUsername</span><span class="hljs-params">()</span> </span>{
+            <span class="hljs-keyword">return</span> username;
+        }
+
+        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">setUsername</span><span class="hljs-params">(String username)</span> </span>{
+            <span class="hljs-keyword">this</span>.username = username;
+        }
+
+        <span class="hljs-function"><span class="hljs-keyword">public</span> String <span class="hljs-title">getPassword</span><span class="hljs-params">()</span> </span>{
+            <span class="hljs-keyword">return</span> password;
+        }
+
+        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">setPassword</span><span class="hljs-params">(String password)</span> </span>{
+            <span class="hljs-keyword">this</span>.password = password;
+        }
+
+        <span class="hljs-meta">@Override</span>
+        <span class="hljs-function"><span class="hljs-keyword">public</span> String <span class="hljs-title">toString</span><span class="hljs-params">()</span> </span>{
+            <span class="hljs-keyword">return</span> <span class="hljs-string">"UserInfo{"</span> +
+                    <span class="hljs-string">"username='"</span> + username + <span class="hljs-string">'\''</span> +
+                    <span class="hljs-string">", password='"</span> + password + <span class="hljs-string">'\''</span> +
+                    <span class="hljs-string">'}'</span>;
+        }
+    }
+
+    <span class="hljs-keyword">private</span> String env;
+
+    <span class="hljs-keyword">private</span> UserInfo user;
+}
+</code></pre><p>4、增加一个 RESTController 来测试使用配置</p><pre><code class="language-java hljs"><span class="hljs-meta">@RestController</span>
+<span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">GitController</span> </span>{
+
+    <span class="hljs-meta">@Autowired</span>
+    <span class="hljs-keyword">private</span> GitConfig gitConfig;
+
+    <span class="hljs-meta">@Autowired</span>
+    <span class="hljs-keyword">private</span> GitAutoRefreshConfig gitAutoRefreshConfig;
+
+    <span class="hljs-meta">@GetMapping</span>(value = <span class="hljs-string">"show"</span>)
+    <span class="hljs-function"><span class="hljs-keyword">public</span> Object <span class="hljs-title">show</span><span class="hljs-params">()</span></span>{
+        <span class="hljs-keyword">return</span> gitConfig;
+    }
+
+    <span class="hljs-meta">@GetMapping</span>(value = <span class="hljs-string">"autoShow"</span>)
+    <span class="hljs-function"><span class="hljs-keyword">public</span> Object <span class="hljs-title">autoShow</span><span class="hljs-params">()</span></span>{
+        <span class="hljs-keyword">return</span> gitAutoRefreshConfig;
+    }
+}
+</code></pre><p>5、项目启动类</p><pre><code class="language-java hljs"><span class="hljs-meta">@SpringBootApplication</span>
+<span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Application</span> </span>{
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> </span>{
+        SpringApplication.run(Application.class, args);
+    }
+}
+</code></pre><p>启动项目，访问 RESTful 接口</p><p><a href="http://localhost:3302/show%EF%BC%8C%E7%BB%93%E6%9E%9C%E5%A6%82%E4%B8%8B%EF%BC%9A">http://localhost:3302/show，结果如下：</a></p><pre><code class="language-json hljs">{
+  <span class="hljs-attr">"env"</span>: <span class="hljs-string">"localhost-dev-edit"</span>,
+  <span class="hljs-attr">"username"</span>: <span class="hljs-string">"fengzheng-dev"</span>,
+  <span class="hljs-attr">"password"</span>: <span class="hljs-string">"password-dev"</span>
+}
+</code></pre><p><a href="http://localhost:3302/autoShow%EF%BC%8C%E7%BB%93%E6%9E%9C%E5%A6%82%E4%B8%8B%EF%BC%9A">http://localhost:3302/autoShow，结果如下：</a></p><pre><code class="language-json hljs">{
+  <span class="hljs-attr">"env"</span>: <span class="hljs-string">"localhost-dev-edit"</span>,
+  <span class="hljs-attr">"user"</span>: {
+      <span class="hljs-attr">"username"</span>: <span class="hljs-string">"fengzheng-dev"</span>,
+      <span class="hljs-attr">"password"</span>: <span class="hljs-string">"password-dev"</span>
+  	}
+}
+</code></pre><h2 id="实现自动刷新">实现自动刷新</h2><p>Spring Cloud Config 在项目启动时加载配置内容这一机制，导致了它存在一个缺陷，修改配置文件内容后，不会自动刷新。例如我们上面的项目，当服务已经启动的时候，去修改 github 上的配置文件内容，这时候，再次刷新页面，对不起，还是旧的配置内容，新内容不会主动刷新过来。<br>但是，总不能每次修改了配置后重启服务吧。如果是那样的话，还是不要用它了为好，直接用本地配置文件岂不是更快。</p><p>它提供了一个刷新机制，但是需要我们主动触发。那就是 @RefreshScope 注解并结合 actuator ，注意要引入 spring-boot-starter-actuator 包。</p><p>1、在 config client 端配置中增加 actuator 配置，上面大家可能就注意到了。</p><pre><code class="language-yaml hljs"><span class="hljs-attr">management:</span>
+<span class="hljs-attr">  endpoint:</span>
+<span class="hljs-attr">    shutdown:</span>
+<span class="hljs-attr">      enabled:</span> <span class="hljs-literal">false</span>
+<span class="hljs-attr">  endpoints:</span>
+<span class="hljs-attr">    web:</span>
+<span class="hljs-attr">      exposure:</span>
+<span class="hljs-attr">        include:</span> <span class="hljs-string">"*"</span>
+</code></pre><p>其实这里主要用到的是 refresh 这个接口</p><p>2、在需要读取配置的类上增加 @RefreshScope 注解，我们是 controller 中使用配置，所以加在 controller 中。</p><pre><code class="language-java hljs"><span class="hljs-meta">@RestController</span>
+<span class="hljs-meta">@RefreshScope</span>
+<span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">GitController</span> </span>{
+
+    <span class="hljs-meta">@Autowired</span>
+    <span class="hljs-keyword">private</span> GitConfig gitConfig;
+
+    <span class="hljs-meta">@Autowired</span>
+    <span class="hljs-keyword">private</span> GitAutoRefreshConfig gitAutoRefreshConfig;
+
+    <span class="hljs-meta">@GetMapping</span>(value = <span class="hljs-string">"show"</span>)
+    <span class="hljs-function"><span class="hljs-keyword">public</span> Object <span class="hljs-title">show</span><span class="hljs-params">()</span></span>{
+        <span class="hljs-keyword">return</span> gitConfig;
+    }
+
+    <span class="hljs-meta">@GetMapping</span>(value = <span class="hljs-string">"autoShow"</span>)
+    <span class="hljs-function"><span class="hljs-keyword">public</span> Object <span class="hljs-title">autoShow</span><span class="hljs-params">()</span></span>{
+        <span class="hljs-keyword">return</span> gitAutoRefreshConfig;
+    }
+}
+</code></pre><p>注意，以上都是在 client 端做的修改。</p><p>之后，重启 client 端，重启后，我们修改 github 上的配置文件内容，并提交更改，再次刷新页面，没有反应。没有问题。</p><p>接下来，我们发送 POST 请求到&nbsp;<a href="http://localhost:3302/actuator/refresh">http://localhost:3302/actuator/refresh</a>&nbsp;这个接口，用 postman 之类的工具即可，此接口就是用来触发加载新配置的，返回内容如下:</p><pre><code class="language-json hljs">[
+    <span class="hljs-string">"config.client.version"</span>,
+    <span class="hljs-string">"data.env"</span>
+]
+</code></pre><p>之后，再次访问 RESTful 接口，<a href="http://localhost:3302/autoShow">http://localhost:3302/autoShow</a>&nbsp;这个接口获取的数据已经是最新的了，说明 refresh 机制起作用了。</p><p>而&nbsp;<a href="http://localhost:3302/show">http://localhost:3302/show</a>&nbsp;获取的还是旧数据，这与 @Value 注解的实现有关，所以，我们在项目中就不要使用这种方式加载配置了。</p><p><span>在 github 中配置 Webhook</span></p><p>这就结束了吗，并没有，总不能每次改了配置后，就用 postman 访问一下 refresh 接口吧，还是不够方便呀。 github 提供了一种 webhook 的方式，当有代码变更的时候，会调用我们设置的地址，来实现我们想达到的目的。</p><p>1、进入 github 仓库配置页面，选择 Webhooks ，并点击 add webhook；<br><img src="https://img2018.cnblogs.com/blog/273364/201907/273364-20190725090559970-931500557.png" alt=""></p><p>2、之后填上回调的地址，也就是上面提到的 actuator/refresh 这个地址，但是必须保证这个地址是可以被 github 访问到的。如果是内网就没办法了。这也仅仅是个演示，一般公司内的项目都会有自己的代码管理工具，例如自建的 gitlab，gitlab 也有 webhook 的功能，这样就可以调用到内网的地址了。</p><p><img src="https://img2018.cnblogs.com/blog/273364/201907/273364-20190725090614229-390401707.png" alt=""></p><p><span>使用 Spring Cloud Bus 来自动刷新多个端</span></p><blockquote><p>Spring Cloud Bus 将分布式系统的节点与轻量级消息代理链接。这可以用于广播状态更改（例如配置更改）或其他管理指令。一个关键的想法是，Bus 就像一个扩展的 Spring Boot 应用程序的分布式执行器，但也可以用作应用程序之间的通信渠道。</p><p>—— Spring Cloud Bus 官方解释</p></blockquote><p>如果只有一个 client 端的话，那我们用 webhook ，设置手动刷新都不算太费事，但是如果端比较多的话呢，一个一个去手动刷新未免有点复杂。这样的话，我们可以借助 Spring Cloud Bus 的广播功能，让 client 端都订阅配置更新事件，当配置更新时，触发其中一个端的更新事件，Spring Cloud Bus 就把此事件广播到其他订阅端，以此来达到批量更新。</p><p>1、Spring Cloud Bus 核心原理其实就是利用消息队列做广播，所以要先有个消息队列，目前官方支持 RabbitMQ 和 kafka。</p><p>这里用的是 RabbitMQ， 所以先要搭一套 RabbitMQ 环境。请自行准备环境，这里不再赘述。我是用 docker 直接创建的，然后安装了 rabbitmq-management 插件，这样就可以在浏览器访问 15672 查看 UI 管理界面了。</p><p>2、在 client 端增加相关的包，注意，只在 client 端引入就可以。</p><pre><code class="language-xml hljs"><span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>org.springframework.cloud<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>spring-cloud-starter-bus-amqp<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span>
+</code></pre><p>3、在配置文件中增加 RabbitMQ 相关配置，默认的端口应该是 5672 ，因为我是用 docker 创建的，所以有所不同。</p><pre><code class="language-yaml hljs"><span class="hljs-attr">spring:</span>
+<span class="hljs-attr">  rabbitmq:</span>
+<span class="hljs-attr">    host:</span> <span class="hljs-string">localhost</span>
+<span class="hljs-attr">    port:</span> <span class="hljs-number">32775</span>
+<span class="hljs-attr">    username:</span> <span class="hljs-string">guest</span>
+<span class="hljs-attr">    password:</span> <span class="hljs-string">guest</span>
+</code></pre><p>4、启动两个或多个 client 端，准备来做个测试</p><p>在启动的时候分别加上 vm option：-Dserver.port=3302 和 -Dserver.port=3303 ，然后分别启动就可以了。</p><p><img src="https://img2018.cnblogs.com/blog/273364/201907/273364-20190725090731099-791914304.png" alt=""></p><p>5、分别打开&nbsp;<a href="http://localhost:3302/autoShow">http://localhost:3302/autoShow</a>&nbsp;和&nbsp;<a href="http://localhost:3303/autoShow%EF%BC%8C%E6%9F%A5%E7%9C%8B%E5%86%85%E5%AE%B9%EF%BC%8C%E7%84%B6%E5%90%8E%E4%BF%AE%E6%94%B9">http://localhost:3303/autoShow，查看内容，然后修改</a>&nbsp;github 上配置文件的内容并提交。再次访问这两个地址，数据没有变化。</p><p>6、访问其中一个的 actuator/bus-refresh 地址，注意还是要用 POST 方式访问。之后查看控制台输出，会看到这两个端都有一条这样的日志输出</p><pre><code class="hljs css"><span class="hljs-selector-tag">o</span><span class="hljs-selector-class">.s</span><span class="hljs-selector-class">.cloud</span><span class="hljs-selector-class">.bus</span><span class="hljs-selector-class">.event</span><span class="hljs-selector-class">.RefreshListener</span>: <span class="hljs-selector-tag">Received</span> <span class="hljs-selector-tag">remote</span> <span class="hljs-selector-tag">refresh</span> <span class="hljs-selector-tag">request</span>. <span class="hljs-selector-tag">Keys</span> <span class="hljs-selector-tag">refreshed</span>
+</code></pre><p>7、再次访问第 5 步的两个地址，会看到内容都已经更新为修改后的数据了。</p><p>综上所述，当我们修改配置后，使用 webhook ，或者手动触发的方式 POST 请求一个 client 端的 actuator/bus-refresh 接口，就可以更新给所有端了。</p><h2 id="结合-eureka-使用-spring-cloud-config">结合 Eureka 使用 Spring Cloud Config</h2><p>以上讲了 Spring Cloud Config 最基础的用法，但是如果我们的系统中使用了 Eureka 作为服务注册发现中心，那么 Spring Cloud Config 也应该注册到 Eureka 之上，方便其他服务消费者使用，并且可以注册多个配置中心服务端，以实现高可用。</p><p>好的，接下来就来集成 Spring Cloud Config 到 Eureka 上。</p><p><span>在 github 仓库中增加配置文件</span></p><p><img src="https://img2018.cnblogs.com/blog/273364/201907/273364-20190725090637487-1608990683.png" alt=""></p><p><span>启动 Eureka Server</span></p><p>首先启动一个 Eureka Server，之前的文章有讲过 Eureka ，可以回过头去看看。<a href="https://mp.weixin.qq.com/s/kGrWQP_n_RCYTTaHbWQ3xQ">Spring Cloud Eureka 实现服务注册发现</a>，为了清楚，这里还是把配置列出来</p><p>1、pom 中引入相关包</p><pre><code class="language-xml hljs"><span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>org.springframework.cloud<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>spring-cloud-starter-netflix-eureka-server<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>org.springframework.boot<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>spring-boot-starter-security<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span>
+</code></pre><p>2、设置配置文件内容</p><p>bootstrap.yml</p><pre><code class="language-yml hljs yaml"><span class="hljs-attr">spring:</span>
+<span class="hljs-attr">  application:</span>
+<span class="hljs-attr">    name:</span> <span class="hljs-string">kite-eureka-center</span>
+<span class="hljs-attr">  security:</span>
+<span class="hljs-attr">      user:</span>
+<span class="hljs-attr">        name:</span> <span class="hljs-string">test</span>  <span class="hljs-comment"># 用户名</span>
+<span class="hljs-attr">        password:</span> <span class="hljs-number">123456</span>   <span class="hljs-comment"># 密码</span>
+<span class="hljs-attr">  cloud:</span>
+<span class="hljs-attr">    inetutils:</span> <span class="hljs-comment">## 网卡设置</span>
+<span class="hljs-attr">      ignoredInterfaces:</span>  <span class="hljs-comment">## 忽略的网卡</span>
+<span class="hljs-bullet">        -</span> <span class="hljs-string">docker0</span>
+<span class="hljs-bullet">        -</span> <span class="hljs-string">veth.*</span>
+<span class="hljs-bullet">        -</span> <span class="hljs-string">VM.*</span>
+<span class="hljs-attr">      preferredNetworks:</span>  <span class="hljs-comment">## 优先的网段</span>
+<span class="hljs-bullet">        -</span> <span class="hljs-number">192.168</span>
+</code></pre><p>application.yml</p><pre><code class="language-yaml hljs"><span class="hljs-attr">server:</span>
+<span class="hljs-attr">  port:</span> <span class="hljs-number">3000</span>
+<span class="hljs-attr">eureka:</span>
+<span class="hljs-attr">  instance:</span>
+<span class="hljs-attr">    hostname:</span> <span class="hljs-string">eureka-center</span>
+<span class="hljs-attr">    appname:</span> <span class="hljs-string">注册中心</span>
+<span class="hljs-attr">  client:</span>
+<span class="hljs-attr">    registerWithEureka:</span> <span class="hljs-literal">false</span> <span class="hljs-comment"># 单点的时候设置为 false 禁止注册自身</span>
+<span class="hljs-attr">    fetchRegistry:</span> <span class="hljs-literal">false</span>
+<span class="hljs-attr">    serviceUrl:</span>
+<span class="hljs-attr">      defaultZone:</span> <span class="hljs-attr">http://test:123456@localhost:3000/eureka</span>
+<span class="hljs-attr">  server:</span>
+<span class="hljs-attr">    enableSelfPreservation:</span> <span class="hljs-literal">false</span>
+<span class="hljs-attr">    evictionIntervalTimerInMs:</span> <span class="hljs-number">4000</span>
+</code></pre><p>3、Application 启动类</p><pre><code class="language-java hljs"><span class="hljs-meta">@EnableEurekaServer</span>
+<span class="hljs-meta">@SpringBootApplication</span>
+<span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Application</span> </span>{
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> </span>{
+        SpringApplication.run(Application.class, args);
+    }
+}
+</code></pre><p>4、启动服务，在浏览器访问 3000 端口，并输出用户名 test，密码 123456 即可进入 Eureka UI</p><p><span>配置 Spring Cloud Config 服务端</span></p><p>服务端和前面的相比也就是多了注册到 Eureka 的配置，其他地方都是一样的。</p><p>1、在 pom 中引入相关的包</p><pre><code class="language-xml hljs"><span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>org.springframework.boot<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>spring-boot-starter-web<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span>
+
+<span class="hljs-comment">&lt;!-- spring cloud config 服务端包 --&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>org.springframework.cloud<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>spring-cloud-config-server<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span>
+
+<span class="hljs-comment">&lt;!-- eureka client 端包 --&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>org.springframework.cloud<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>spring-cloud-starter-netflix-eureka-client<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span>
+</code></pre><p>2、配置文件做配置</p><p>application.yml</p><pre><code class="language-yaml hljs"><span class="hljs-attr">server:</span>
+<span class="hljs-attr">  port:</span> <span class="hljs-number">3012</span>
+<span class="hljs-attr">eureka:</span>
+<span class="hljs-attr">  client:</span>
+<span class="hljs-attr">    serviceUrl:</span>
+<span class="hljs-attr">      register-with-eureka:</span> <span class="hljs-literal">true</span>
+<span class="hljs-attr">      fetch-registry:</span> <span class="hljs-literal">true</span>
+<span class="hljs-attr">      defaultZone:</span> <span class="hljs-attr">http://test:123456@localhost:3000/eureka/</span>
+<span class="hljs-attr">  instance:</span>
+<span class="hljs-attr">    preferIpAddress:</span> <span class="hljs-literal">true</span>
+<span class="hljs-attr">spring:</span>
+<span class="hljs-attr">  application:</span>
+<span class="hljs-attr">    name:</span> <span class="hljs-string">config-eureka-server</span>
+<span class="hljs-attr">  cloud:</span>
+<span class="hljs-attr">     config:</span>
+<span class="hljs-attr">        server:</span>
+<span class="hljs-attr">          git:</span>
+<span class="hljs-attr">            uri:</span> <span class="hljs-attr">https://github.com/huzhicheng/config-only-a-demo</span>
+<span class="hljs-attr">            username:</span> <span class="hljs-string">github</span> <span class="hljs-string">用户名</span>
+<span class="hljs-attr">            password:</span> <span class="hljs-string">github</span> <span class="hljs-string">密码</span>
+<span class="hljs-attr">            default-label:</span> <span class="hljs-string">master</span>
+<span class="hljs-attr">            search-paths:</span> <span class="hljs-string">config</span>
+</code></pre><p>相比于不加 Eureka 的版本，这里仅仅是增加了 Eureka 的配置，将配置中心注册到 Eureka ，作为服务提供者对外提供服务。</p><p>3、启动类，在 @EnableConfigServer 的基础上增加了 @EnableEurekaClient，另外也可以用 @EnableDiscoveryClient 代替 @EnableEurekaClient</p><pre><code class="language-java hljs"><span class="hljs-meta">@SpringBootApplication</span>
+<span class="hljs-meta">@EnableConfigServer</span>
+<span class="hljs-meta">@EnableEurekaClient</span>
+<span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Application</span> </span>{
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> </span>{
+        SpringApplication.run(Application.class, args);
+    }
+}
+</code></pre><p>4、启动服务，之后访问 Eureka ，可以看到服务已注册成功</p><p><img src="https://img2018.cnblogs.com/blog/273364/201907/273364-20190725090702926-870149340.png" alt=""></p><p><span>配置 Spring Cloud Config 客户端</span></p><p>客户端的配置相对来说变动大一点，加入了 Eureka 之后，就不用再直接和配置中心服务端打交道了，要通过 Eureka 来访问。另外，还是要注意客户端的 application 名称要和 github 中配置文件的名称一致。</p><p>1、pom 中引入相关的包</p><pre><code class="language-xml hljs"><span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>org.springframework.boot<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>spring-boot-starter-web<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span>
+
+<span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>org.springframework.cloud<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>spring-cloud-starter-config<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span>
+
+<span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>org.springframework.boot<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>spring-boot-starter-actuator<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span>
+
+<span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>org.springframework.cloud<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>spring-cloud-starter-netflix-eureka-client<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span>
+</code></pre><p>2、配置文件</p><p>bootstrap.yml</p><pre><code class="language-yaml hljs"><span class="hljs-attr">eureka:</span>
+<span class="hljs-attr">  client:</span>
+<span class="hljs-attr">    serviceUrl:</span>
+<span class="hljs-attr">      register-with-eureka:</span> <span class="hljs-literal">true</span>
+<span class="hljs-attr">      fetch-registry:</span> <span class="hljs-literal">true</span>
+<span class="hljs-attr">      defaultZone:</span> <span class="hljs-attr">http://test:123456@localhost:3000/eureka/</span>
+<span class="hljs-attr">  instance:</span>
+<span class="hljs-attr">    preferIpAddress:</span> <span class="hljs-literal">true</span>
+
+
+<span class="hljs-attr">spring:</span>
+<span class="hljs-attr">  profiles:</span>
+<span class="hljs-attr">    active:</span> <span class="hljs-string">dev</span>
+
+<span class="hljs-meta">---</span>
+<span class="hljs-attr">spring:</span>
+<span class="hljs-attr">  profiles:</span> <span class="hljs-string">prod</span>
+<span class="hljs-attr">  application:</span>
+<span class="hljs-attr">    name:</span> <span class="hljs-string">config-eureka-client</span>
+<span class="hljs-attr">  cloud:</span>
+<span class="hljs-attr">     config:</span>
+<span class="hljs-attr">       label:</span> <span class="hljs-string">master</span>
+<span class="hljs-attr">       profile:</span> <span class="hljs-string">prod</span>
+<span class="hljs-attr">       discovery:</span>
+<span class="hljs-attr">         enabled:</span> <span class="hljs-literal">true</span>
+<span class="hljs-attr">         service-id:</span> <span class="hljs-string">config-eureka-server</span>
+
+
+<span class="hljs-meta">---</span>
+<span class="hljs-attr">spring:</span>
+<span class="hljs-attr">  profiles:</span> <span class="hljs-string">dev</span>
+<span class="hljs-attr">  application:</span>
+<span class="hljs-attr">    name:</span> <span class="hljs-string">config-eureka-client</span>
+<span class="hljs-attr">  cloud:</span>
+<span class="hljs-attr">     config:</span>
+<span class="hljs-attr">       label:</span> <span class="hljs-string">master</span>  <span class="hljs-comment">#指定仓库分支</span>
+<span class="hljs-attr">       profile:</span> <span class="hljs-string">dev</span>   <span class="hljs-comment">#指定版本 本例中建立了dev 和 prod两个版本</span>
+<span class="hljs-attr">       discovery:</span>
+<span class="hljs-attr">          enabled:</span> <span class="hljs-literal">true</span>  <span class="hljs-comment"># 开启</span>
+<span class="hljs-attr">          service-id:</span> <span class="hljs-string">config-eureka-server</span> <span class="hljs-comment"># 指定配置中心服务端的server-id </span>
+</code></pre><p>除了注册到 Eureka 的配置外，就是配置和配置中心服务端建立关系。</p><p>其中 service-id 也就是服务端的application name。</p><p>application.yml</p><pre><code class="language-yaml hljs"><span class="hljs-attr">server:</span>
+<span class="hljs-attr">  port:</span> <span class="hljs-number">3011</span>
+<span class="hljs-attr">management:</span>
+<span class="hljs-attr">  endpoint:</span>
+<span class="hljs-attr">    shutdown:</span>
+<span class="hljs-attr">      enabled:</span> <span class="hljs-literal">false</span>
+<span class="hljs-attr">  endpoints:</span>
+<span class="hljs-attr">    web:</span>
+<span class="hljs-attr">      exposure:</span>
+<span class="hljs-attr">        include:</span> <span class="hljs-string">"*"</span>
+
+<span class="hljs-attr">data:</span>
+<span class="hljs-attr">  env:</span> <span class="hljs-string">NaN</span>
+<span class="hljs-attr">  user:</span>
+<span class="hljs-attr">    username:</span> <span class="hljs-string">NaN</span>
+<span class="hljs-attr">    password:</span> <span class="hljs-string">NaN</span>
+</code></pre><p>3、启动类，增加了 @EnableEurekaClient 注解，可以用 @EnableDiscoveryClient 代替</p><pre><code class="language-java hljs"><span class="hljs-meta">@SpringBootApplication</span>
+<span class="hljs-meta">@EnableEurekaClient</span>
+<span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Application</span> </span>{
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> </span>{
+        SpringApplication.run(Application.class, args);
+    }
+}
+</code></pre><p>4、另外的配置实体类和 RESTController 和上面的一样，没有任何更改，直接参考即可。</p><p>5、启动 client 端，访问&nbsp;<a href="http://localhost:3011/autoShow%EF%BC%8C%E5%8D%B3%E5%8F%AF%E7%9C%8B%E5%88%B0%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E5%86%85%E5%AE%B9%E3%80%82">http://localhost:3011/autoShow，即可看到配置文件内容。</a></p><p>这个例子只是介绍了和 Eureka 结合的最基础的情况，还可以注册到高可用的 Eureka 注册中心，另外，配置中心服务端还可以注册多个实例，同时保证注册中心的高可用。</p><h2 id="注意事项"><span>注意事项</span></h2><p><span>1.</span>&nbsp;在 git 上的配置文件的名字要和 config 的 client 端的 application name 对应；</p><p><span>2.</span>&nbsp;在结合 eureka 的场景中，关于 eureka 和 git config 相关的配置要放在 bootstrap.yml 中，否则会请求默认的 config server 配置，这是因为当你加了配置中心，服务就要先去配置中心获取配置，而这个时候，application.yml 配置文件还没有开始加载，而 bootstrap.yml 是最先加载的。</p></body>
+</html>

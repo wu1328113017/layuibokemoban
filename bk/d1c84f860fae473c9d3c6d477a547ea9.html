@@ -1,0 +1,7 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>body{padding:1.875rem;}</style><meta charset='UTF-8'>
+</head>
+<body><p>可以先学习怎么创建shell脚本：<a target="_blank" href="https://www.runoob.com/linux/linux-shell-passing-arguments.html">https://www.runoob.com/linux/linux-shell-passing-arguments.html</a></p><p>不管用什么方式先在服务器上创建文件，后缀名为sh</p><p>我是用命令来创建的</p><p>因为进程的进程pid是变幻莫测的，所以得先查询出之前运行的jar的进程pid，杀死这个进程然后再启动，所以得分两步，第一步查询进程，第二部就是杀死进程启动程序</p><p>创建两个文件：</p><p>创建第一个文件：查询进程.sh</p><p>查看：vim 查询进程.sh</p><p>按i编辑</p><p>内容如下</p><p>ps -ef|grep $1</p><p>执行：sh 查询进程.sh java</p><p>$1是在shell脚本中的参数，对应的是执行文件时传入的第一个参数，也就是java</p><p>执行这个文件会把需要重启的java进程进程pid显示出来，记住它,假设为1000</p><p>创建第二个文件：重启Java.sh</p><p>查看：vim 重启Java.sh</p><p>按i编辑</p><p>内容如下</p><p>kill -9 $1 //杀死进程</p><p>nohup java -jar -Dspring.profiles.active=formal $2 &amp; //这是我的写法，我指定了spring boot配置文件</p><p>nohup java -jar $2 &amp; //这是普通启动的写法</p><p>执行：sh 重启Java.sh 1000 jar包的文件名以及后缀</p><p>*可以优化重启的文件，假设没有进程pid传入，那就不能使用kill -9命令了</p><p>使用流程控制 if else</p><p>if [ $1 != "null" ]</p><p>then</p><p>&nbsp; kill -9 $1 //杀死进程</p><p>fi //结束命令</p><p>&nbsp; nohup java -jar $2 &amp;</p><p>执行：sh 重启Java.sh null jar包的文件名以及后缀</p><p><br></p><p><br></p></body>
+</html>

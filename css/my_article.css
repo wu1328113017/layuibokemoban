@@ -1,0 +1,42 @@
+			a{
+				cursor: pointer;
+			}
+			#category{
+				max-height: 200px;
+				overflow-y: auto;
+			}
+			#category::-webkit-scrollbar,.hot-articles::-webkit-scrollbar {/* 设置滚动条 */
+			      width: 4px;
+			      background-color: #dcdcdc;
+			}
+			#category::-webkit-scrollbar-thumb,.hot-articles::-webkit-scrollbar-thumb {/* 设置竖直滑块 */
+				background-color: grey;
+			}
+			#category li{
+				border-left: 6px solid rgba(0,0,0,0);
+			}
+			#category li:hover{
+				    border-left: 6px solid #484947;
+				    background-color: #f8f9f7;
+			}
+			#category .active{
+				border-left: 6px solid #484947;
+				background-color: #f8f9f7;
+			}
+			#category1 .active{
+				background-color: #6bc30d;
+			}
+			.hot-articles{
+				max-height: 200px;
+				overflow-y: auto !important;
+			}
+			.col-other{
+				float: none !important;
+			}
+			.col-content {
+			    float: right !important;
+			}
+			.article-item {
+			    margin-top: 0 !important;
+				margin-bottom: 20px;
+			}

@@ -1,0 +1,7 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>body{padding:1.875rem;}</style><meta charset='UTF-8'>
+</head>
+<body><p>可以在需要判断的页面加一个隐藏的input框</p><p>第一次进入这个页面的时候先判断这个input框是否有值，没有值就设置一个值，有值就说明当前页面是从上一级页面返回过来的，因为跳转页面时，浏览器会保存input中的值，当返回到这个页面时就会自动填充到input框中，所以判断是否是返回的页面就可以利用这一点，没有值就说明浏览器没有input的值缓存</p><p>代码示例</p><p>在body标签中写入隐藏的input框</p><p>&lt;input type="text" id="history" value="" style="display:none"&gt;//必须指定value为""，要不然等下写$("#history").val()获取值的时候会报错</p><p>jquery:</p><p>if($("#history).val() != ''){</p><p>&nbsp; &nbsp; &nbsp; &nbsp; //当前页面是从上一级页面返回过来的</p><p>}else{</p><p>&nbsp; &nbsp; &nbsp; &nbsp; //当前页面不是从上一级页面返回过来的</p><p>&nbsp; &nbsp; &nbsp; &nbsp; $("#history").val('history');</p><p>}</p></body>
+</html>

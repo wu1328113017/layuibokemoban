@@ -1,0 +1,7 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>body{padding:1.875rem;}</style><meta charset='UTF-8'>
+</head>
+<body><p>&nbsp; &nbsp; &nbsp; &nbsp;我做久了项目后发现拦截器，过滤器，监听器，以及一些自己编写的工具类都是一样的，有时候不同的项目可能会使用同一个数据库，这时候连持久层都是一样的，每次做一个新的项目都要将以前的代码复制过来，造成代码重复，冗余，效率也低还麻烦，所以我想了一个方法，就是将这些同样的代码写在一个项目里，然后打包成jar，给需要它的项目用maven依赖，其实很简单，就假设这些有拦截器，过滤器的jar包为core，即基础的意思，然后a项目需要引用，步骤如下:</p><p>&nbsp; &nbsp; &nbsp; 1.core在成jar之前是个项目，它还得打包，在idea上打包直接一般都是点击右边的maven的功能选项clean(先)和packge(后)就行了，这样也可以，不过它是打包成一个独立的jar包了，而不是项目所依赖的jar包的那种形式，就是一些配置文件都还没打包上去，这些配置文件不是我们生成的，而是maven生成的，这样打包成的jar包可以被项目依赖，但很麻烦，具体的可以去网上百度，所以我是使用的另一种方式，也是在idea点击右边的maven的功能选项clean和install，install它会直接打包至maven仓库中</p><p>&nbsp; &nbsp; &nbsp; &nbsp;<img src="http://212.64.22.159:8081/bk/e35b15581f80460dace2271a0ff3b1fa.jpg" alt="图片暂时显示不出"></p><p>&nbsp; &nbsp; &nbsp; 2.在a项目里面引用core.jar：</p><p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 就跟平时引用依赖一样的写法:</p><p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;groupId&gt;&lt;/groupId&gt;</p><p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;artifactId&gt;core&lt;/artifactId&gt;</p><p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;</p><p>&nbsp; &nbsp; &nbsp; &nbsp;然后就这样完成了，额，其实也挺简单的，不过要注意的点是a项目的启动类所在的包名必须和core的&lt;groupId&gt;一样，不然springboot会扫描不到core里面的注解</p><p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</p></body>
+</html>

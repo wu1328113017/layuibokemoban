@@ -1,0 +1,44 @@
+.warp-box .info {
+	background-image: url(https://wdz-1258450135.cos.ap-shanghai.myqcloud.com/layuibokemoban/images/theshy.jpg);
+	color: #FFFFFF;
+	background-position: center;
+	text-align: center;
+	padding-top: 100px !important;
+}
+
+.doc-container {
+	background-image: url(../image/haixi.jpg);
+	background-size: 100% 100%;
+}
+
+.warp-box {
+	padding: 20px;
+	box-sizing: border-box;
+}
+
+.warp-box>div {
+	background-color: #FFFFFF;
+	padding: 10px;
+}
+
+.warp-box .panel {
+	padding: 40px;
+}
+
+.blogerinfo-contact {
+	border: none;
+}
+
+.blogerinfo-contact a {
+	background-color: #FFFFFF;
+}
+
+.sex {
+	color: #29B6F6;
+	margin-left: 10px;
+}
+
+.birthday img {
+	width: 16px;
+	margin-right: 5px;
+}

@@ -1,0 +1,45 @@
+@media screen and (max-width: 1024px) {
+	.layui-layer-iframe {
+		width: 90% !important;
+		top: 12px !important;
+	}
+
+	.blog-user>.layui-nav-item {
+		left: -20px;
+	}
+
+	#login-btn>span {
+		color: #FFFFFF !important;
+		background-color: rgba(0, 0, 0, 0.1) !important;
+	}
+
+	.gird-header1 li a,
+	.header-logo,
+	.blog-user {
+		color: #787977 !important;
+	}
+
+	.phone-menu>i {
+		background-color: #787977;
+	}
+
+	.gird-header {
+		background-color: #FFFFFF;
+		color: #FFFFFF;
+		top: 0;
+		width: 100%;
+		margin-left: 0;
+		padding: 0;
+	}
+
+	#section3 .info,
+	#section3 .panel {
+		float: none !important;
+		width: auto !important;
+	}
+
+	#section3 .panel {
+		margin-left: 0 !important;
+		margin-top: 10px;
+	}
+}

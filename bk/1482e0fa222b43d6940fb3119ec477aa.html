@@ -1,0 +1,7 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>body{padding:1.875rem;}</style><meta charset='UTF-8'>
+</head>
+<body><p>今天在用ajax的时候，发现无论是使用async-await的方法还是设置async为false都不能使请求同步，一开始我以为是async-await对ajax没用，当时还没设置async为false，所以我就不管async-await有没有用了就设置async为false试一下，发现还是不能使请求同步，我就奇了个怪了，我以为是不是我写ajax就格外的奇怪，额，废话不多说，反正也是纠结了很久，在网上百度了很多，但都表示ajax请求只要设置async为false就是同步请求，不会有其他的问题发生，然后我就想既然async-await和设置ajax的async为false都没用那就只能是自己写的手法不对，所以就去自己写了一个ajax方法，因为之前都是在jqueryAjax的基础上封装的，然后设置async为false，发现有用，然后我再看了之前有用的，就算写了async-await手法的代码，如下：</p><p>function setPages(pageNo,pageSize) {</p><p><span>				</span>return&nbsp;</p><p>myapp.myAjaxJson({url:myapp.getApi("article/getArticleList"), data:JSON.stringify({</p><p><span>					</span>pageNo: pageNo,</p><p><span>					</span>pageSize: pageSize</p><p><span>				</span>}), success:function(result) {</p><p><span>					</span>return result.data;</p><p><span>					</span>}</p><p><span>				</span>})</p><p><span>			</span>}</p><p><br></p><p>//调用</p><p>async function() {</p><p><span>					</span>var page = await setPages(1,pageSize);</p><p><span>					</span>console.log(page);</p><p>}</p><p>我发现setPages函数里面是这样写的return ajax函数，然后ajax函数里面处理完后又会return出结果，这时我才发现原来是return的问题，之前我是没有写return的，只是在ajax方法的处理结果函数里面写了个return，所以改了之后不管是async-await还是设置async为false都管用了。</p><p>总结：因为ajax是一个函数，光在函数里面写ajax不写return这个ajax是没有结果返回的，因为就算ajax的处理结果函数里面写了return也没用，因为它返回的只是处理结果函数的结果，并不会返回到上层，意思是：一层函数包裹了一层函数，里面的函数return了一个结果返回，但外面的函数没有return里面这个函数是不会返回出里面函数的结果的</p></body>
+</html>

@@ -1,0 +1,7 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>body{padding:1.875rem;}</style><meta charset='UTF-8'>
+</head>
+<body><p>引用：<a target="_blank" href="https://blog.csdn.net/u011403848/article/details/81163311">https://blog.csdn.net/u011403848/article/details/81163311</a></p><p>排序规则：是指对指定字符集下不同字符的比较规则。其特征有以下几点：</p><p>1、 两个不同的字符集不能有相同的排序规则</p><p>2、 两个字符集有一个默认的排序规则</p><p>3、 有一些常用的命名规则。如_ci结尾表示大小写不敏感（caseinsensitive）,_cs表示大小写敏感（case sensitive）,_bin表示二进制的比较（binary）.</p><p>utf-8有默认的排序规则：</p><p>命令：SHOW CHARSET LIKE 'utf8%';</p><p><img alt="" class="has" src="https://img-blog.csdn.net/20170817155153129?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvd2RlcmdvdXpp/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center"></p><p>区别：</p><p>utf8_general_ci 不区分大小写，这个你在注册用户名和邮箱的时候就要使用。<br>utf8_general_cs 区分大小写，如果用户名和邮箱用这个 就会造成不良后果<br>utf8_bin:字符串每个字符串用二进制数据编译存储。 区分大小写，而且可以存二进制的内容</p><p>utf8_general_ci校对速度快，但准确度稍差。<br>utf8_unicode_ci准确度高，但校对速度稍慢。</p><p><span>用一句话概况上面这段话：utf8_unicode_ci比较准确，utf8_general_ci速度比较快。通常情况下 utf8_general_ci的准确性就够我们用的了，在我看过很多程序源码后，发现它们大多数也用的是utf8_general_ci，所以新建数据 库时一般选用utf8_general_ci就可以了</span></p><p>&nbsp;</p></body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<link href="layui/css/layui.css" rel="stylesheet" type="text/css">
+		<link rel="stylesheet" href="css/login.css" />
+		<link rel="stylesheet" href="https://www.jq22.com/jquery/bootstrap-4.2.1.css">
+		<link rel="stylesheet" href="https://www.jq22.com/jquery/font-awesome.4.7.0.css">
+		<link rel="stylesheet" href="plugins/sliderV/disk/slidercaptcha.css" />
+		<link rel="stylesheet" href="css/my_register.css" />
+	</head>
+	<body>
+		<div class="layui-form layui-form-pane">
+			<div class="login-body">
+				<div class="layui-form layui-card-body layui-form-pane" lay-filter="text">
+					<div class="layui-form-item">
+						<label class="layui-form-label required"><i class="layui-icon layui-icon-username"></i></label>
+						<div class="layui-input-block">
+							<input type="hidden" value="regbase" name="dopost">
+							<input type="hidden" value="1" name="step">
+							<input type="hidden" value="个人" name="mtype">
+							<input type="hidden" class="intxt w200" size="20" id="uname" name="uname">
+							<input class="layui-input" id="username" name="username" lay-verify="required|username" placeholder="请输入用户名"
+							 type="text" required="" readonly>
+						</div>
+					</div>
+					<div class="layui-form-item">
+						<label class="layui-form-label required"><i class="layui-icon layui-icon-email"></i></label>
+						<div class="layui-input-block">
+							<input class="layui-input" lay-verify="required|email" id="email" name="email" type="text" placeholder="请输入邮箱">
+						</div>
+					</div>
+					<div class="layui-form-item">
+						<label class="layui-form-label required"><i class="layui-icon layui-icon-password"></i></label>
+						<div class="layui-input-block">
+							<input lay-verify="required|pass" class="layui-input" id="password" name="userpwd" placeholder="设置您的密码" type="password"
+							 readonly>
+						</div>
+					</div>
+					<div class="layui-form-item">
+						<label class="layui-form-label required"><i class="layui-icon layui-icon-password"></i></label>
+						<div class="layui-input-block">
+							<input lay-verify="required|confirmPass" class="layui-input" id="userpwdok" name="userpwdok" placeholder="确认您的密码"
+							 type="password" readonly>
+						</div>
+					</div>
+					<div class="layui-form-item" pane="">
+						<label class="layui-form-label required"><i class="layui-icon layui-icon-male"></i></label>
+						<div class="layui-input-block">
+							<input type="radio" name="sex" value="1" title="男" checked="">
+							<input type="radio" name="sex" value="2" title="女">
+						</div>
+					</div>
+					<div class="layui-form-item">
+						<div class="container-fluid">
+							<div class="form-row">
+								<div class="col-12">
+									<div class="slidercaptcha card">
+										<div class="card-header">
+											<label><span>请完成安全验证</span></label>
+											<input type="hidden" lay-verify="required|sliderV" value="false" id="sliderV">
+										</div>
+										<div class="card-body">
+											<div id="captcha"></div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="reg-doc">
+						<input type="checkbox" lay-verify="required|checked" id="reg-doc" lay-skin="primary" checked="">
+						<div class="layui-unselect layui-form-checkbox layui-form-checked" lay-skin="primary"><i class="layui-icon layui-icon-ok"></i></div>
+						<span>我已经仔细阅读并接受<a href="javascript:;">《用户服务条款》</a></span>
+					</div>
+					<div class="login-btn">
+						<span lay-submit="" class="reg opacity" lay-filter="reg" onclick="">立即注册</span>
+						<span class="login-back opacity" onclick="openTopLoginDialog()">返回登录</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+	<script src="layui/layui.js"></script>
+	<script src="js/jquery.min.js"></script>
+	<script src="https://www.jq22.com/jquery/bootstrap-4.2.1.js"></script>
+	<script src="plugins/sliderV/disk/longbow.slidercaptcha.js"></script>
+	<script src="js/myapp.js"></script>
+	<script src="js/my_register.js"></script>
+</html>
