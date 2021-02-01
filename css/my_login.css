@@ -1,0 +1,32 @@
+.slidercaptcha {
+	width: 100%;
+	height: auto;
+	border-radius: 4px;
+}
+
+.card-header {
+	padding: 5px 10px !important;
+}
+
+.slidercaptcha .card-body {
+	padding: 1rem;
+	height: 235px;
+}
+
+.slidercaptcha canvas:first-child {
+	border-radius: 4px;
+	border: 1px solid #e6e8eb;
+}
+
+.slidercaptcha.card .card-header {
+	background-image: none;
+	background-color: rgba(0, 0, 0, 0.03);
+}
+
+.refreshIcon {
+	top: -54px;
+}
+
+.container-fluid {
+	padding: 0 !important;
+}

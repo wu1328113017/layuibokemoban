@@ -1,0 +1,7 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>body{padding-left:1.875rem;}</style><meta charset='UTF-8'>
+</head>
+<body><p>相同点：两者都是等文档加载完成再执行里面的代码</p><p>区别：</p><p>&nbsp; &nbsp; &nbsp; &nbsp; 1.$(document).ready(function(){})可以缩写成$(function(){});而$(window).load()不行</p><p>&nbsp; &nbsp; &nbsp; &nbsp; 2.$(document).ready()是等html中的dom节点加载完成执行，$(window).load()是等html中的dom节点以及其他的js代码加载完成执行，另外，这个方法有个问题，我在谷歌浏览器上发现的，就是第一次加载会有用，之后就没用了，清除一下浏览器缓存就有用了，然后第二次之后又是没用，推测是浏览器缓存引发的bug，所以不建议使用这个，推荐使用定时器控制执行顺序，详情可以看我的文章“使用定时器控制代码执行顺序”</p><p>&nbsp; &nbsp; &nbsp; &nbsp; 3.$(document).ready()可以任意加载多次，也就是在脚本中任意写多个这个函数都会执行，而$(window).load()不管写多少个都只会执行一个</p></body>
+</html>

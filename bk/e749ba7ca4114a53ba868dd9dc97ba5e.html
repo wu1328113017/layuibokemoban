@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>body{padding:1.875rem;}</style><meta charset='UTF-8'>
+</head>
+<body><p>相信有过编程经验的人都见过注解这种东西，也许像我一样，会用、熟练之后，也就一直放那不管了。但是有没有一天突然想到，注解是个什么东西，如果你想到了，那么恭喜你，恭喜你想到了。不论多么复杂的框架、多么复杂的代码、无非是封装、继承、反射、泛型。但是，注解这种东西，是完全独立于java正常体系之外的东西，所以今天在这里一探究竟。</p><p>1.java常用注解：@Override（覆盖，覆写），@Deprecated（表明该方法已经过时，在调用的时候会有警告），@Suppvisewarnings（忽略某些警告）</p><p>2.自定义注解：</p><div class="cnblogs_code"><pre>@Inherited<span>//</span><span>表示该注解注解的类，被继承的时候，子类也有了该注解（只能作用于类，不能作用于方法和接口）</span>
+@Retention(RetentionPolicy.SOURCE)<span>//</span><span>注解的生命周期，可以是源码期，编译期，运行期</span>
+@Target({ElementType.TYPE,ElementType.METHOD})<span>//</span><span>注解的作用域，可以是类，也可以是方法</span>
+@Documented<span>//</span><span>表示生成Javadoc的时候会包含注解信息</span>
+<span>public</span> @<span>interface</span><span> zhujie {
+  String desc();</span><span>//</span><span>注解的内容，实际上是一个变量，其类型只能是基本类型和String、Enumeration等常见类型</span>
+  <span>int</span> age() <span>default</span> 18<span>;
+}</span></pre></div><p>3.解析注解</p><div class="cnblogs_code"><pre><span>public</span> <span>class</span><span> Jiexi {
+    </span><span>public</span> <span>static</span> <span>void</span><span> main(String[] args){
+        </span><span>try</span><span> {
+            </span><span>//</span><span>先通过反射获取到java类</span>
+            Class a=Class.forName("A"<span>);
+
+            </span><span>//</span><span>该方法来查看某类是否有注解，参数是定义的注解类的Class对象</span>
+            <span>boolean</span> isExist=a.isAnnotationPresent(zhujie.<span>class</span><span>);
+            </span><span>if</span><span>(isExist){
+                System.out.println(</span>"我是类上的注解"<span>);
+            }
+
+            </span><span>//</span><span>用反射方法获取该类的所有方法，并且查看是否含有某注解</span>
+            Method[]methods=<span>a.getMethods();
+            </span><span>for</span> (<span>int</span> i = 0; i &lt; methods.length; i++<span>) {
+                Method method</span>=<span>methods[i];
+                </span><span>boolean</span> isExist2=method.isAnnotationPresent(zhujie.<span>class</span><span>);
+                </span><span>if</span><span>(isExist2){
+                    System.out.println(</span>"我是方法上的注解"<span>);
+                }
+
+                </span><span>//</span><span>也可以获取某方法上面的所有注解，一个一个遍历找到是否包含自己要找的注解</span>
+                Annotation annotation[]=<span>method.getAnnotations();
+                </span><span>for</span><span> (Annotation annotation1 : annotation) {
+                    </span><span>if</span>(annotation1 <span>instanceof</span><span> zhujie){
+                        System.out.println(</span>"我是方法上的注解！"<span>);
+                    }
+                }
+            }
+        } </span><span>catch</span><span> (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+}</span></pre><p><br></p><p><span class="cnblogs_code_copy"><a title="复制代码"><br></a></span></p></div></body>
+</html>

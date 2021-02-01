@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<link href="layui/css/layui.css" rel="stylesheet" type="text/css">
+		<link rel="stylesheet" href="css/login.css" />
+		<link rel="stylesheet" href="https://www.jq22.com/jquery/bootstrap-4.2.1.css">
+		<link rel="stylesheet" href="https://www.jq22.com/jquery/font-awesome.4.7.0.css">
+		<link rel="stylesheet" href="plugins/sliderV/disk/slidercaptcha.css" />
+		<style>
+			.slidercaptcha {
+			    width: 100%;
+			    height: auto;
+			    border-radius: 4px;
+			}
+			
+			.slidercaptcha .card-body {
+			    padding: 1rem;
+				height: 235px;
+			}
+			
+			.slidercaptcha canvas:first-child {
+			    border-radius: 4px;
+			    border: 1px solid #e6e8eb;
+			}
+			
+			.slidercaptcha.card .card-header {
+			    background-image: none;
+			    background-color: rgba(0, 0, 0, 0.03);
+			}
+			
+			.refreshIcon {
+			    top: -54px;
+			}
+			.container-fluid{
+				padding: 0 !important;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="layui-form layui-form-pane">
+			<div class="login-body">
+				<div class="layui-form layui-card-body layui-form-pane" lay-filter="text">
+					<div class="layui-form-item">
+						<label class="layui-form-label required"><i class="layui-icon layui-icon-username"></i></label>
+						<div class="layui-input-block">
+							<input type="hidden" value="regbase" name="dopost">
+							<input type="hidden" value="1" name="step">
+							<input type="hidden" value="个人" name="mtype">
+							<input type="hidden" class="intxt w200" size="20" id="uname" name="uname">
+							<input class="layui-input" id="username" name="username" lay-verify="required|username" placeholder="请输入用户名"
+							 type="text" required="" readonly>
+						</div>
+					</div>
+					<div class="layui-form-item">
+						<label class="layui-form-label required"><i class="layui-icon layui-icon-email"></i></label>
+						<div class="layui-input-block">
+							<input class="layui-input" lay-verify="required|email" id="email" name="email" type="text" placeholder="请输入邮箱">
+						</div>
+					</div>
+					<div class="layui-form-item" pane="">
+						<label class="layui-form-label required"><i class="layui-icon layui-icon-male"></i></label>
+						<div class="layui-input-block">
+							<input type="radio" name="sex" value="1" title="男">
+							<input type="radio" name="sex" value="2" title="女" checked="">
+						</div>
+					</div>
+					<div class="layui-form-item">
+						<div class="container-fluid">
+							<div class="form-row">
+								<div class="col-12">
+									<div class="slidercaptcha card">
+										<div class="card-header">
+											<label><span>请完成安全验证</span></label>
+											<input type="hidden" lay-verify="required|sliderV" value="false" id="sliderV">
+										</div>
+										<div class="card-body">
+											<div id="captcha"></div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="login-btn">
+						<span lay-submit="" class="reg opacity" lay-filter="reg" onclick="">立即修改</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+	<script src="layui/layui.js"></script>
+	<script src="js/jquery.min.js"></script>
+	<script src="https://www.jq22.com/jquery/bootstrap-4.2.1.js"></script>
+	<script src="plugins/sliderV/disk/longbow.slidercaptcha.js"></script>
+	<script src="js/myapp.js"></script>
+	<script>
+		var id = myapp.getPathId("iy");
+		layui.use(['form', 'layedit', 'laydate'], function() {
+			var form = layui.form,
+				layer = layui.layer;
+			//将用户数据赋值到文本框内
+			myapp.myAjax1({url:"article/queryUserInfoByID",data:{id:id}},function(result){
+				var d = {
+					username: result.username,
+					email: result.email,
+					sex: result.gender,
+				}
+				//解决浏览器记住账户密码的问题
+				$("input").attr("readonly", "readonly");
+				$("input").focus(function() {
+					$(this).removeAttr("readonly");
+				});
+				$("input").blur(function() {
+					$(this).attr("readonly", "readonly");
+				});
+				form.val("text",d);
+			})
+			form.verify({
+				sliderV: function(value) {
+					if (value == "false") {
+						return "安全验证不通过"
+					}
+				}
+			});
+			//提交
+			form.on('submit(reg)', function(data) {
+				//console.log(data.elem) //被执行事件的元素DOM对象，一般为button对象
+				//console.log(data.form) //被执行提交的form对象，一般在存在form标签时才会返回
+				//console.log(data.field) //当前容器的全部表单字段，名值对形式：{name: value}
+				//return false; //阻止表单跳转。如果需要表单跳转，去掉这段即可。
+				//console.log(data);
+				var d = {
+					username: data.field.username,
+					email: data.field.email,
+					gender: data.field.sex,
+					id: id
+				}
+				myapp.myAjaxJson1({
+					url: "article/updateUserInfo",
+					data: JSON.stringify(d)
+				}, function(result) {
+					parent.layer.msg("修改成功");
+					for(var k in d){
+						parent.userinfo[k] = d[k];
+					}
+					parent.user.$data.user = parent.userinfo;
+					myapp.loca_setItem("userinfo",parent.userinfo,2*60*60);
+					parent.layer.close(parent.u); 
+				})
+			});
+		});
+		//滑块验证
+		$('#captcha').sliderCaptcha({
+			repeatIcon: 'fa fa-redo',
+			setSrc: function() {
+				return 'https://picsum.photos/id/' + Math.round(Math.random() * 4) + '/280/157';
+			},
+			onSuccess: function() {
+				parent.layer.msg("验证成功");
+				$("#sliderV").val("true");
+			}
+		});
+	</script>
+</html>

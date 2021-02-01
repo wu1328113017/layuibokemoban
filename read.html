@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+		<meta name="renderer" content="webkit">
+		<meta name="viewport" content="width=device-width" />
+		<meta name="author" content="www.lzqcode.com" />
+		<title>文章阅读</title>
+		<link rel="stylesheet" href="font-awesome/css/font-awesome.min.css">
+		<link rel="stylesheet" href="layui/css/layui.css" />
+		<link rel="stylesheet" href="css/master.css" />
+		<link rel="stylesheet" href="css/gloable.css" />
+		<link rel="stylesheet" href="css/blog.css" />
+		<link rel="stylesheet" href="css/message.css" />
+		<link rel="stylesheet" href="css/login.css" />
+		<link rel="stylesheet" href="css/my_read.css" />
+		<link rel="stylesheet" href="plugins/cssLoading/css/style-2.css" />
+	</head>
+	<body>
+		<div class="html_loading">
+			<div class="loader">
+				<span class="text">Loading</span>
+				<span class="spinner"></span>
+			</div>
+		</div>
+		<div class="header">
+		</div>
+		<header class="gird-header">
+			<div class="header-fixed">
+				<div class="header-inner" id="userinfo">
+					<a href="javascript:void(0)" class="header-logo" id="logo">Mr.wu</a>
+					<nav class="nav" id="nav">
+						<ul>
+							<li><a href="index.html">首页</a></li>
+							<li><a href="article.html">博客</a></li>
+							<li><a href="message.html">留言</a></li>
+							<li><a href="diary.html">日记</a></li>
+							<li><a href="link.html">友链</a></li>
+							<li><a href="about.html">关于我</a></li>
+						</ul>
+					</nav>
+					<a id="login-btn" class="blog-user" v-show="login_show">
+						<span>登录</span>
+					</a>
+					<ul class="layui-nav blog-user" style="background-color: rgba(0,0,0,0);" lay-filter="blog-user" v-show="!login_show">
+						<li class="layui-nav-item">
+							<a class="userinfo">
+								<img v-bind:src="user.headphoto" class="headphoto layui-nav-img">
+							</a>
+							<dl class="layui-nav-child user-utils">
+								<!-- 二级菜单 -->
+								<dd class="username">用户:{{user.username}}</dd>
+								<template v-if="user.type == 1">
+									<dd><a onclick="setHeadphoto()">更换头像</a></dd>
+									<dd><a onclick="update_userinfo()">修改信息</a></dd>
+								</template>
+								<dd><a onclick="user_out()">退出</a></dd>
+							</dl>
+						</li>
+					</ul>
+					<a class="phone-menu">
+						<i></i>
+						<i></i>
+						<i></i>
+					</a>
+				</div>
+			</div>
+		</header>
+		<div class="doc-container" id="doc-container">
+			<div class="container-fixed">
+				<div class="col-content" style="width:100%">
+					<div class="inner">
+						<article class="article-list">
+							<input type="hidden" value="@Model.BlogTypeID" id="blogtypeid" />
+							<section class="article-item">
+								<aside class="title" style="line-height:1.5;">
+									<h4>{{article.title}}</h4>
+									<p class="fc-grey fs-14">
+										<small>
+											作者：<a href="javascript:void(0)" target="_blank" class="fc-link">吴东哲</a>
+										</small>
+										<small class="ml10">围观群众：<i class="readcount">{{article.count}}</i></small>
+										<small class="ml10">更新于 <label>{{article.createDate}}</label> </small>
+									</p>
+								</aside>
+								<div class="time mt10" style="padding-bottom:0;">
+									<span class="day">{{article.day}}</span>
+									<span class="month fs-18">{{article.month}}<small class="fs-14">月</small></span>
+									<span class="year fs-18">{{article.year}}</span>
+								</div>
+								<div class="content artiledetail" style="border-bottom: 1px solid #e1e2e0; padding-bottom: 20px;">
+									<div class="article-desc mt20" v-show="article.abstract1"><strong>摘要：</strong>{{article.abstract1}}</div>
+									<div id="content"></div>
+									<div class="copyright mt20">
+										<p class="f-toe fc-black">
+											非特殊说明，本文版权归 东哲个人博客 所有，转载请注明出处.
+										</p>
+										<p class="f-toe">
+											本文标题：
+											<a href="javascript:void(0)" class="r-title">{{article.title}}</a>
+										</p>
+										<p class="f-toe">
+											本文网址：
+											<a v-bind:href="article.txtUrl" target="_blank">{{article.txtUrl}}</a>
+										</p>
+									</div>
+									<div id="aplayer" style="margin:5px 0"></div>
+									<ol class="b-relation"></ol>
+								</div>
+								<!-- 点赞，收藏，评论，转发栏 -->
+								<div class="uscp">
+									<a class="praise"><i class="fa fa-thumbs-up"></i><span>点赞</span>({{article.praise}})</a>
+									<a class="collections"><i class="fa fa-star"></i><span>收藏</span>({{article.collections}})</a>
+									<a class="comments"><i class="fa fa-comment"></i><span>评论</span>({{article.comments}})</a>
+									<a class=""><i class="fa fa-paper-plane"></i><span>分享</span></a>
+								</div>
+								<div class="f-cb">
+								</div>
+								<div class="mt20 f-fwn fs-24 fc-grey comment" style="border-top: 1px solid #e1e2e0; padding-top: 20px;">
+								</div>
+								<fieldset class="layui-elem-field layui-field-title">
+									<legend>发表评论</legend>
+									<div class="layui-field-box">
+										<div class="leavemessage" style="text-align:initial">
+											<input type="hidden" name="articleid" id="articleid" value="@Model.ID">
+											<div class="layui-form">
+												<div class="layui-form-item">
+													<textarea name="commentContent" lay-verify="commentContent" id="commentEditor" placeholder="请输入内容" class="layui-textarea"></textarea>
+												</div>
+												<div class="layui-form-item">
+													<button class="layui-btn comment_submit" lay-submit="formLeaveMessage" lay-filter="formLeaveMessage">发表评论</button>
+												</div>
+											</div>
+										</div>
+									</div>
+								</fieldset>
+							</section>
+						</article>
+						<template v-if="comments.length>0">
+							<div class="mt20">
+								<div class="layui-tab-item layui-show">
+									<blockquote class="layui-elem-quote">所有评论</blockquote>
+								</div>
+								<ul class="message-list" id="message-list">
+									<li class="zoomIn article" v-for="comment in comments">
+										<div class="comment-parent">
+											<a name="remark-1"></a>
+											<img v-bind:src="comment.userImage">
+											<div class="info">
+												<span class="username">{{comment.userName}}</span>
+												<p class="comment-time">{{comment.createDate}}</p>
+											</div>
+											<div class="comment-content" v-html="comment.content">
+											</div>
+											<p class="info info-footer">
+												<!-- <i class="fa fa-map-marker" aria-hidden="true"></i> -->
+												<!-- <span>深圳</span> -->
+												<a href="javascript:;" class="btn-reply" v-bind:data-userId="comment.userId" v-bind:data-username="comment.userName"
+												 v-bind:data-userImage="comment.userImage" v-bind:data-id="comment.id">回复</a>
+												<template v-if="comment.replys.length>1">
+													<a href="javascript:;" class="btn-xsycreply c" v-show="comment.isShowCKHF" v-bind:data-id="comment.id">查看回复({{comment.replys.length}})</a>
+													<a href="javascript:;" class="btn-xsycreply s" v-show="!comment.isShowCKHF" v-bind:data-id="comment.id">收起回复({{comment.replys.length}})</a>
+												</template>
+											</p>
+										</div>
+										<hr>
+										<div class="comment-child" v-show="!comment.isShowCKHF" v-for="reply in comment.replys">
+											<a name="reply-1"></a>
+											<div class="info">
+												<img v-bind:src="reply.userImage">
+												<span class="username">{{reply.userName}}</span>
+												<span style="padding-right:0;margin-left:-5px;">回复</span>
+												<img v-bind:src="reply.acceptUserImage">
+												<span class="username">{{reply.acceptUserName}}</span>
+											</div>
+											<div class="info reply-content">
+												<!-- <i class="fa fa-map-marker" aria-hidden="true"></i> -->
+												<!-- <span>深圳</span> -->
+												<p v-html="reply.content" class="reply"></p>
+												<p class="reply-t"><span class="comment-time">{{reply.createDate}}</span>
+													<a href="javascript:;" class="btn-reply reply" v-bind:data-userId="reply.userId" v-bind:data-username="reply.userName"
+													 v-bind:data-userImage="reply.userImage" v-bind:data-id="comment.id">回复</a>
+												</p>
+											</div>
+										</div>
+									</li>
+								</ul>
+							</div>
+							<div id="LAY_page1">
+							</div>
+						</template>
+						<div class="replycontainer layui-hide" id="replycontainer">
+							<div class="layui-form">
+								<div class="layui-form-item">
+									<textarea id="replyEditor" name="replyContent" lay-verify="replyContent" placeholder="请输入回复内容" class="layui-textarea"
+									 style="min-height:80px;"></textarea>
+								</div>
+								<div class="layui-form-item">
+									<button class="layui-btn layui-btn-xs comment_submit" lay-submit="formReply" lay-filter="formReply">提交</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<footer class="grid-footer">
+			<div class="footer-fixed">
+				<div class="copyright">
+					<div class="info">
+						<p>Copyright &copy; 2020-2021 东哲个人博客 <a href="https://beian.miit.gov.cn" style="color:#565755;font-size: 13px">赣ICP备20001864号-2</a></p>
+					</div>
+				</div>
+			</div>
+		</footer>
+		<script src="layui/layui.js"></script>
+		<script src="js/yss/gloable.js"></script>
+		<script src="js/jquery.min.js"></script>
+		<script src="js/vue.min.js"></script>
+		<script src="js/myapp.js"></script>
+		<script src="js/config.js"></script>
+		<!-- <script src="js/pagemessage.js"></script> -->
+		<script>
+			var area;
+			layui.use(['element', 'jquery', 'form', 'layedit', 'flow'], function() {
+				var element = layui.element;
+				var form = layui.form;
+				var $ = layui.jquery;
+				var layedit = layui.layedit;
+				var flow = layui.flow;
+				//留言的编辑器
+				var remarkOptions = {
+					height: 150,
+					tool: ['face'],
+				}
+				var remarkIndex = layedit.build('remarkEditor', remarkOptions);
+				//评论的编辑器
+				//先记住参数设置，待会好清空
+				var commentOptions = {
+					height: 150,
+					tool: ['face'],
+				}
+				var commentIndex = layedit.build('commentEditor', commentOptions);
+				//回复的编辑器
+				var replyOptions = {
+					height: 100,
+					tool: ['face'],
+				}
+				var replyIndex = layedit.build('replyEditor', replyOptions);
+				var acceptUserId, acceptUserName, acceptUserImage, commentId;
+				var $container = $('#replycontainer');
+				//清除富文本
+				var clearContainer = function() {
+					$container.find("iframe").contents().find("body").html("");
+					$(".layui-layedit-iframe").find("iframe").contents().find("body").html("");
+				}
+				//记忆当前点击过的回复/收起按钮
+				var jy;
+				var jy_c = function() {
+					if (jy) {
+						jy.click();
+					}
+				}
+				//编辑器的验证
+				form.verify({
+					//评论的验证
+					commentContent: function(value) {
+						value = $.trim(layedit.getContent(commentIndex));
+						if (value == "") return "请输入内容";
+						//验证成功后发表评论
+						var data = {
+							"articleId": id,
+							"articleTitle": doc_container.$data.article.title,
+							"content": value
+						}
+						//获取当前用户
+						var userinfo = myapp.loca_getItem("userinfo");
+						if (userinfo) {
+							data.userName = userinfo.username;
+							data.userId = userinfo.id;
+							data.userImage = userinfo.headphoto;
+						}
+						myapp.myAjaxJson1({
+							url: "article/publishComment",
+							data: JSON.stringify(data)
+						}, function(result) {
+							clearContainer();
+							//commentIndex = layedit.build('commentEditor', commentOptions);
+							//动态的将评论内容添加到页面去
+							//doc_container.$data.comments.push(th1(result));
+							result.replys = [];
+							var ds = [];
+							ds.push(th1(result));
+							Array.prototype.push.apply(ds, doc_container.$data.comments);
+							doc_container.$data.comments = ds;
+							jy_c();
+						});
+					},
+					//回复的验证
+					replyContent: function(value) {
+						value = $.trim(layedit.getContent(replyIndex));
+						if (value == "") return "请输入内容";
+						//先判断是否为匿名用户，匿名用户不能回复
+						//获取当前用户
+						var userinfo = myapp.loca_getItem("userinfo");
+						if (!userinfo) {
+							return "匿名用户不能回复评论";
+						}
+						//验证成功后发表回复
+						var data = {
+							"articleId": id,
+							"articleTitle": doc_container.$data.article.title,
+							"content": value,
+							"type": 1,
+							"acceptUserName": acceptUserName,
+							"acceptUserId": acceptUserId,
+							"acceptUserImage": acceptUserImage,
+							"commentId": commentId,
+							"userId": userinfo.id,
+							"userImage": userinfo.headphoto,
+							"userName": userinfo.username
+						}
+						myapp.myAjaxJson1({
+							url: "article/publishComment",
+							data: JSON.stringify(data)
+						}, function(result) {
+							clearContainer();
+							//replyIndex = layedit.build('replyEditor', replyOptions);
+							for (var k in doc_container.$data.comments) {
+								if (doc_container.$data.comments[k].id == commentId) {
+									var dss = [];
+									dss.push(th1(result));
+									Array.prototype.push.apply(dss, doc_container.$data.comments[k].replys);
+									doc_container.$data.comments[k].replys = dss;
+									break;
+								}
+							}
+							jy_c();
+						})
+					},
+					//留言的验证
+					remarkContent: function(value) {
+						value = $.trim(layedit.getContent(remarkIndex));
+						if (value == "") return "请输入内容";
+						//验证成功后发表留言
+						var data = {
+							"content": value,
+							"type": 2,
+							"userId": "1",
+							"userName": "匿名用户",
+						}
+						//获取当前用户
+						var userinfo = myapp.loca_getItem("userinfo");
+						if (userinfo) {
+							data.userName = userinfo.username;
+							data.userId = userinfo.id;
+							data.userImage = userinfo.headphoto;
+						}
+						myapp.myAjaxJson1({
+							url: "article/publishRemark",
+							data: JSON.stringify(data)
+						}, function(result) {
+							clearContainer();
+							//remarkIndex = layedit.build('remarkEditor', remarkOptions);
+							//动态的将留言内容添加到页面去
+							//doc_container.$data.comments.push(th1(result));
+							result.replys = [];
+							var ds = [];
+							ds.push(th1(result));
+							Array.prototype.push.apply(ds, doc_container.$data.comments);
+							doc_container.$data.comments = ds;
+							jy_c();
+						});
+					},
+					//回复留言
+					replyRemarkContent: function(value) {
+						value = $.trim(layedit.getContent(replyIndex));
+						if (value == "") return "请输入内容";
+						//获取当前用户
+						var userinfo = myapp.loca_getItem("userinfo");
+						//先判断是否为匿名用户，匿名用户不能回复
+						if (!userinfo) {
+							return "匿名用户不能回复留言";
+						}
+						//验证成功后发表回复
+						var data = {
+							"content": value,
+							"type": 1,
+							"commentId": commentId,
+							"userId": userinfo.id,
+							"userName": userinfo.username,
+							"userImage": userinfo.headphoto,
+							"acceptUserName": acceptUserName,
+							"acceptUserId": acceptUserId,
+							"acceptUserImage": acceptUserImage,
+						}
+						myapp.myAjaxJson1({
+							url: "article/publishComment",
+							data: JSON.stringify(data)
+						}, function(result) {
+							clearContainer();
+							//replyIndex = layedit.build('replyEditor', replyOptions);
+							for (var k in doc_container.$data.comments) {
+								if (doc_container.$data.comments[k].id == commentId) {
+									var dss = [];
+									dss.push(th1(result));
+									Array.prototype.push.apply(dss, doc_container.$data.comments[k].replys);
+									doc_container.$data.comments[k].replys = dss;
+									break;
+								}
+							}
+							jy_c();
+						})
+					}
+				});
+				//回复按钮点击事件
+				$(document).on('click', '.btn-reply', function() {
+					var h = $(this).parents(".comment-parent").height(),
+						c = ".comment-parent",
+						s = -30,
+						b = 100,
+						_this = $(this);
+					if (_this.hasClass("reply")) {
+						h = $(this).parents(".comment-child").height();
+						s = -30;
+						b = 90;
+						c = ".comment-child";
+					}
+					if (_this.hasClass("remarkReply")) {
+						s = 0;
+					}
+					acceptUserId = _this.data('userid');
+					acceptUserName = _this.data('username');
+					acceptUserImage = _this.data('userimage');
+					commentId = _this.data('id');
+					if (_this.text() == '回复') {
+						if (c == ".comment-child") {
+							$container.removeClass('bj');
+						} else if (c == ".comment-parent") {
+							$container.addClass('bj');
+						}
+						if (jy) {
+							jy.click();
+						}
+						jy = _this;
+						$container.addClass('layui-hide');
+						$container.find('textarea').attr('placeholder', '回复【' + acceptUserName + '】');
+						$container.find('input[name="targetUserId"]').val(acceptUserId);
+						_this.parents('#message-list').find('.btn-reply').text('回复');
+						_this.text('收起');
+						var th = h + replyOptions.height + b;
+						_this.parents(c).animate({
+							height: th + "px"
+						}, 100, function() {
+							var t = _this.offset().top + s + 'px';
+							$container.css({
+								top: t
+							})
+							$container.removeClass('layui-hide');
+						});
+					} else {
+						jy = '';
+						$container.addClass('layui-hide');
+						$container.find('input[name="targetUserId"]').val(0);
+						_this.text('回复');
+						h = _this.parents(c).height() - replyOptions.height - b;
+						_this.parents(c).animate({
+							height: h + "px"
+						}, 100);
+					}
+				});
+
+			});
+		</script>
+		<script src="js/login.js"></script>
+		<script src="js/my_read.js"></script>
+		<script>
+			window.onload = function() {
+				$(".html_loading").fadeOut(500);
+				setTimeout(function(){
+					$(".html_loading").remove();
+				},500);
+			};
+		</script>
+	</body>
+</html>

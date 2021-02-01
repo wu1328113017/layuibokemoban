@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>登录成功</title>
+	</head>
+	<body>
+		<h3></h3>
+		<img>
+		<p></p>
+	</body>
+	<script src="js/jquery.min.js"></script>
+	<script src="js/myapp.js"></script>
+	<script type="text/javascript" charset="utf-8" src="https://connect.qq.com/qc_jssdk.js"></script>
+	<script>
+		QC.Login.getMe(function(openId, accessToken) {
+			var qq_user_info = {
+				accessToken: accessToken,
+				openId: openId
+			}
+			myapp.loca_setItem("qq_user_info", qq_user_info, 2 * 60 * 60);
+			$.ajax({
+				url: "/qq_api/user/get_user_info",
+				data: {
+					access_token: accessToken,
+					oauth_consumer_key: 101928598,
+					openid: openId
+				},
+				type: "GET",
+				success: function(result) {
+					result = JSON.parse(result);
+					console.log(result);
+					$("h3").text("登录成功,1秒后跳转");
+					$("img").attr("src",result.figureurl_qq_1)
+					$("p").text(result.nickname);
+					var userinfo = {
+						headphoto: result.figureurl_qq_1,
+						username: result.nickname,
+						type: 2
+					}
+					myapp.loca_setItem("userinfo",userinfo, 2 * 60 * 60);
+					setTimeout(function() {
+						window.close();
+					}, 1000);
+				},
+			});
+		}) 
+	</script>
+</html>

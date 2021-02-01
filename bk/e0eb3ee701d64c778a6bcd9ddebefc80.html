@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>body{padding:1.875rem;}</style><meta charset='UTF-8'>
+</head>
+<body><p>转载：<a target="_blank" href="https://blog.csdn.net/chuangdi4123/article/details/100814365">https://blog.csdn.net/chuangdi4123/article/details/100814365</a></p><h1><a href="https://www.cnblogs.com/azhqiang/p/7714482.html" rel="nofollow">spring-boot:run启动时，指定spring.profiles.active</a></h1><p>例如有如下几个配置文件</p><p>application.properties中配有</p><pre><code class="hljs">spring.profiles.active=dev
+</code></pre><p>application-dev.properties 中配有</p><pre><code class="hljs vbscript"><span class="hljs-built_in">server</span>.port=<span class="hljs-number">8081</span>
+</code></pre><p>application-test.properties 中配有</p><pre><code class="hljs vbscript"><span class="hljs-built_in">server</span>.port=<span class="hljs-number">8082</span>
+</code></pre><p>Maven启动test配置指定Profile通过-P，如</p><pre><code class="hljs css">`<span class="hljs-selector-tag">mvn</span> <span class="hljs-selector-tag">spring-boot</span><span class="hljs-selector-pseudo">:run</span> <span class="hljs-selector-tag">-Ptest</span>`，但这是<span class="hljs-selector-tag">Maven</span>的<span class="hljs-selector-tag">Profile</span>。
+</code></pre><p>如果要指定spring-boot的<code>spring.profiles.active</code>，则必须使用</p><pre><code class="hljs bash">`mvn spring-boot:run -Drun.profiles=<span class="hljs-built_in">test</span>`启动<span class="hljs-built_in">test</span>配置
+</code></pre><p>如果使用命令行直接运行jar文件，则使用</p><pre><code class="hljs bash">`java -jar -Dspring.profiles.active=<span class="hljs-built_in">test</span> demo-0.0.1-SNAPSHOT.jar`启动<span class="hljs-built_in">test</span>配置
+</code></pre><p>如果使用开发工具，运行Application.java文件启动，则增加参数</p><pre><code class="hljs bash">`--spring.profiles.active=<span class="hljs-built_in">test</span>`启动<span class="hljs-built_in">test</span>配置
+</code></pre><p>dev是默认的配置</p><pre><code class="hljs">例如：application-dev.properties文件名dev 和启动spring.profiles.active=dev的dev相对应</code></pre></body>
+</html>

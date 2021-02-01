@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<style>
+			img {
+				border-radius: 2px;
+				cursor: pointer;
+			}
+
+			#headphotos img {
+				width: 50px;
+				height: 50px;
+			}
+			#dqtx{
+				padding: 5px;
+			}
+			body>div{
+				border: 1px solid #F5F5F5;
+				margin-bottom: 10px;
+			}
+			
+			#dqtx img {
+				width: 60px;
+				height: 60px;
+			}
+
+			body {
+				padding: 10px;
+			}
+
+			.tab {
+				border-left: 2px solid #1E9FFF;
+				padding: 5px 10px;
+				font-size: 14px;
+				letter-spacing: 2px;
+				background-color: #F5F5F5;
+				margin: 0;
+			}
+			.headphoto{
+				float: left;
+				width: 65px;
+				height: 65px;
+				padding: 5px;
+				box-sizing: border-box;
+			}
+			.headphoto:hover{
+				border: 1px solid #F5F5F5;
+			}
+			.clear-float{
+				clear: both;
+			}
+			.submit{
+				text-align: right;
+				border: none;
+			}
+			#submit{
+				display: inline-block;
+				cursor: pointer;
+				padding: 5px 10px;
+				letter-spacing: 2px;
+				background-color: #1E9FFF;
+				color: #FFFFFF;
+				margin-top: 10px;
+			}
+			#submit:hover{
+				background-color: #1e9fff8f;
+			}
+		</style>
+	</head>
+	<body>
+		<div>
+			<p class="tab">当前头像</p>
+			<div id="dqtx">
+				<img />
+			</div>
+		</div>
+		<div>
+			<p class="tab">选择头像</p>
+			<div id="headphotos">
+				<div class="headphoto">
+					<img class="img"/>
+				</div>
+			</div>
+			<div class="clear-float"></div>
+		</div>
+		<div class="submit"><a id="submit">确认修改</a></div>
+	</body>
+	<script src="js/jquery.min.js"></script>
+	<script src="js/myapp.js"></script>
+	<script>
+		$("#dqtx img").attr("src", parent.user.$data.user.headphoto);
+		var id = myapp.getPathId("iy");
+		//获取头像列表
+		var $h = $("#headphotos");
+		var d = $h.clone();
+		myapp.myAjax1({
+			url: "article/getHeadphotos",
+			type: "GET"
+		}, function(result) {
+			var h = '';
+			for (var k in result) {
+				d.find("img").attr("src", "https://wdz-1258450135.cos.ap-shanghai.myqcloud.com/headphotos" + result[k]);
+				h += d.html();
+			}
+			$h.html(h);
+		})
+		$("#headphotos").on("click","img",function(){
+			var a = $(this).attr("src");
+			$(this).attr("src",$("#dqtx img").attr("src"))
+			$("#dqtx img").attr("src",a);
+		})
+		//提交修改
+		$("#submit").click(function(){
+			var h = $("#dqtx img").attr("src");
+			var d = {
+				id: id,
+				headphoto: h
+			}
+			myapp.myAjaxJson1({
+				url: "article/updateUserInfo",
+				data: JSON.stringify(d)
+			}, function(result) {
+				parent.layer.msg("修改成功");
+				for(var k in d){
+					parent.userinfo[k] = d[k];
+				}
+				parent.user.$data.user = parent.userinfo;
+				myapp.loca_setItem("userinfo",parent.userinfo,2*60*60);
+				parent.layer.close(parent.sh); 
+			})
+		})
+	</script>
+</html>

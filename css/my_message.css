@@ -1,0 +1,37 @@
+.layui-layedit-tool {
+	border-bottom-style: none !important;
+}
+
+.replycontainer {
+	width: 80%;
+	position: absolute;
+	margin-left: 10%;
+}
+
+.btn-xsycreply {
+	float: right;
+}
+
+.comment_submit {
+	background-color: #6bc30d;
+	float: right;
+}
+
+.layui-elem-quote {
+	margin-bottom: 0 !important;
+	border: none;
+	border-bottom: 1px solid #6bc30d;
+	background-color: #FFFFFF !important;
+}
+
+.layui-elem-quote>i {
+	margin-right: 10px;
+}
+
+.message-list li {
+	border-color: #6bc30d;
+}
+
+#LAY_page1 {
+	text-align: center;
+}

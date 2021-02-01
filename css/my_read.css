@@ -1,0 +1,118 @@
+.uscp {
+	background-color: #f5f5f5;
+	line-height: 50px;
+	margin-top: 10px;
+}
+
+.uscp a {
+	cursor: pointer;
+	color: #666666;
+	margin-left: 20px;
+	font-size: 13px;
+}
+
+.uscp a i {
+	font-size: 18px;
+	margin-right: 2px;
+}
+
+.uscp .active1 {
+	color: #6bc30d;
+}
+
+textarea {
+	resize: none !important;
+}
+
+.comment_submit {
+	background-color: #6bc30d;
+	float: right;
+}
+
+.replycontainer {
+	width: 80%;
+	position: absolute;
+	margin-left: 10%;
+}
+
+.btn-xsycreply {
+	float: right;
+}
+
+#LAY_page1 {
+	text-align: center;
+}
+
+.layui-laypage .layui-laypage-curr .layui-laypage-em {
+	background-color: #6bc30d !important;
+}
+
+.layui-elem-quote {
+	margin-bottom: 0 !important;
+	border: none;
+	border-bottom: 1px solid #6bc30d;
+	background-color: #FFFFFF !important;
+}
+
+.layui-elem-quote>i {
+	margin-right: 10px;
+}
+
+.message-list li {
+	border-color: #6bc30d;
+}
+
+.layui-layedit-tool {
+	border-bottom-style: none !important;
+}
+
+.article-desc {
+	background-color: #f8f8f8;
+	padding: 10px;
+	border-left: 3px solid #6bc30d;
+	font-size: 14px;
+	border-radius: 2px;
+	color: #999;
+}
+
+#content {
+	padding: 16px;
+}
+
+/* 文章内容样式 */
+blockquote {
+	border-left: 7px solid #6bc30d;
+	border-radius: 2px;
+	padding: 10px 20px;
+	background-color: #ececec;
+	box-shadow: 1px 1px 1px 1px rgba(0, 0, 0, 0.5);
+	margin: 10px 0;
+}
+
+pre {
+	color: #555555;
+	background-color: #f5f5f5;
+	border: 1px solid #eaeaea;
+	-webkit-border-radius: 0px;
+	-moz-border-radius: 0px;
+	border-radius: 0px;
+	margin: 5px;
+	overflow-x: auto;
+}
+
+pre {
+	display: block;
+	padding: 9.5px;
+	font-size: 13px;
+	line-height: 1.42857143;
+	color: #333;
+	word-break: break-all;
+	word-wrap: break-word;
+	background-color: #f5f5f5;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+}
+
+body {
+	padding: 0;
+}

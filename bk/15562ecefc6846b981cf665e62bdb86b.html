@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>body{padding:1.875rem;}</style><meta charset='UTF-8'>
+</head>
+<body><p>最近在研究spring源码，先从解析xml文件开始。</p><p>我使用的是idea+maven，需要依赖spring-beans和spring-core两个jar包</p><p>代码：</p><pre><p><span>实体类：</span></p><p><span>public class </span>MyTestBean {</p>   <span>private </span>String <span>testStr </span>= <span>"testStr"</span>;<br><br>   <span>public </span>String getTestStr() {<br>      <span>return </span><span>testStr</span>;<br>   }<br><br>   <span>public void </span>setTestStr(String testStr) {<br>      <span>this</span>.<span>testStr </span>= testStr;<br>   }<br>   <br>   <br>}
+<p>beans.xml:</p><p>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+<p>&lt;beans xmlns="http://www.springframework.org/schema/beans"</p>       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd"&gt;
+    &lt;bean id="myTestBean" class="spring_yuanma_test.MyTestBean"&gt;&lt;/bean&gt;
+<p>&lt;/beans&gt;</p><p>测试类:</p><p>@SuppressWarnings("deprecation")
+public class BeansTest {
+	
+	public static void main(String[] args) {
+		BeanFactory bf = new XmlBeanFactory(new ClassPathResource("beans.xml"));
+		MyTestBean bean = (MyTestBean)bf.getBean("myTestBean");
+		System.out.println(bean.getTestStr());
+	}
+	
+	
+}</p></p></pre></body>
+</html>
